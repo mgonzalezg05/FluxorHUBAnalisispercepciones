@@ -87,7 +87,7 @@ export function handleManualSelection() {
     updateReconciliationPanel();
 }
 
-function updateReconciliationPanel() {
+export function updateReconciliationPanel() {
     const { panel, reconcileView, deReconcileView, reconcileBtn, ...rest } = ui.reconciliationPanel;
     const { pending, reconciled, unmatched } = appState.manualSelection;
     const formatCurrency = (num) => num.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -101,14 +101,24 @@ function updateReconciliationPanel() {
     deReconcileView.classList.toggle('hidden', !showDeReconcileMode || showReconcileMode);
 
     if (showReconcileMode && !showDeReconcileMode) {
-        const arcaTotal = [...pending].reduce((sum, index) => sum + normalizeRecord(appState.allArcaRecords.find(r => r.__originalIndex === index), recUI.selectCuitArca.value, recUI.selectMontoArca.value).monto, 0);
-        const contTotal = [...unmatched].reduce((sum, index) => sum + normalizeRecord(appState.allContabilidadRecords.find(r => r.__originalIndex === index), recUI.selectCuitContabilidad.value, recUI.selectMontoContabilidad.value).monto, 0);
+        const arcaTotal = [...pending].reduce((sum, index) => {
+            const record = appState.allArcaRecords.find(r => r.__originalIndex === index);
+            return sum + (record ? normalizeRecord(record, recUI.selectCuitArca.value, recUI.selectMontoArca.value).monto : 0);
+        }, 0);
+        const contTotal = [...unmatched].reduce((sum, index) => {
+            const record = appState.allContabilidadRecords.find(r => r.__originalIndex === index);
+            return sum + (record ? normalizeRecord(record, recUI.selectCuitContabilidad.value, recUI.selectMontoContabilidad.value).monto : 0);
+        }, 0);
+
         const net = arcaTotal - contTotal;
         rest.selectedArcaTotal.textContent = `$${formatCurrency(arcaTotal)}`;
         rest.selectedContTotal.textContent = `$${formatCurrency(contTotal)}`;
         rest.selectedNetTotal.textContent = `$${formatCurrency(net)}`;
         rest.selectedNetTotal.style.color = Math.abs(net) < 0.01 ? 'var(--success-color)' : 'var(--danger-color)';
-        reconcileBtn.disabled = !(Math.abs(net) < 0.01 && pending.size > 0 && unmatched.size > 0);
+        
+        const canReconcile = Math.abs(net) < 0.01 && (pending.size + unmatched.size) >= 2;
+        reconcileBtn.disabled = !canReconcile;
+
     }
     if (showDeReconcileMode && !showReconcileMode) {
         rest.selectedReconciledCount.textContent = reconciled.size;
