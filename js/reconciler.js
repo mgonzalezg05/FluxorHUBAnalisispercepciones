@@ -1,5 +1,5 @@
 import { supabaseClient } from './config.js';
-import { appState, ui } from './state.js';
+import { appState, ui, STATUS } from './state.js';
 import { showMessage, normalizeRecord, renderTable } from './utils.js';
 import { populateProviderSelector } from './providerAnalysis.js';
 import { calculateAllProviderDiscrepancies } from './discrepancyAnalysis.js';
@@ -91,11 +91,11 @@ export async function processReconciliation() {
     try {
         appState.allArcaRecords = appState.dataArca
             .filter(r => r && typeof r === 'object')
-            .map((r, i) => ({ ...r, __originalIndex: i, Estado: 'Pendiente' }));
+            .map((r, i) => ({ ...r, __originalIndex: i, Estado: STATUS.PENDING }));
         
         appState.allContabilidadRecords = appState.dataContabilidad
             .filter(r => r && typeof r === 'object')
-            .map((r, i) => ({ ...r, __originalIndex: i, Estado: 'Pendiente' }));
+            .map((r, i) => ({ ...r, __originalIndex: i, Estado: STATUS.PENDING }));
 
         const arcaNorm = appState.allArcaRecords.map(r => normalizeRecord(r, cuitArcaCol, montoArcaCol));
         const contNorm = appState.allContabilidadRecords.map(r => normalizeRecord(r, cuitContCol, montoContCol));
@@ -113,16 +113,15 @@ export async function processReconciliation() {
                 arcaRec.matched = true;
                 match.matched = true;
                 
-                // --- CORRECCIÓN DEFINITIVA APLICADA AQUÍ ---
                 const arcaRecordToUpdate = appState.allArcaRecords.find(r => r.__originalIndex === arcaRec.original.__originalIndex);
                 if (arcaRecordToUpdate) {
-                    arcaRecordToUpdate.Estado = 'Conciliada';
+                    arcaRecordToUpdate.Estado = STATUS.RECONCILED;
                     arcaRecordToUpdate.matchId = matchId;
                 }
 
                 const contabRecordToUpdate = appState.allContabilidadRecords.find(r => r.__originalIndex === match.original.__originalIndex);
                 if (contabRecordToUpdate) {
-                    contabRecordToUpdate.Estado = 'Conciliada';
+                    contabRecordToUpdate.Estado = STATUS.RECONCILED;
                     contabRecordToUpdate.matchId = matchId;
                 }
             }
@@ -149,8 +148,8 @@ export function displayGeneralResults() {
     const arcaMontoCol = recUI.selectMontoArca.value;
     const arcaData = appState.allArcaRecords;
     
-    const reconciled = arcaData.filter(r => r.Estado.startsWith('Conciliado'));
-    const pending = arcaData.filter(r => r.Estado === 'Pendiente');
+    const reconciled = arcaData.filter(r => r.Estado === STATUS.RECONCILED || r.Estado === STATUS.RECONCILED_WITH_DIFF);
+    const pending = arcaData.filter(r => r.Estado === STATUS.PENDING);
     
     const totalArca = arcaData.reduce((sum, r) => sum + (normalizeRecord(r, null, arcaMontoCol).monto || 0), 0);
     const totalReconciled = reconciled.reduce((sum, r) => sum + (normalizeRecord(r, null, arcaMontoCol).monto || 0), 0);
@@ -333,9 +332,9 @@ export async function deleteSelectedReconciliation() {
 
 export function downloadGeneralReport() {
     const wb = XLSX.utils.book_new();
-    const pending = appState.allArcaRecords.filter(r => r.Estado === 'Pendiente');
-    const reconciled = appState.allArcaRecords.filter(r => r.Estado.startsWith('Conciliado'));
-    const unmatchedContabilidad = appState.allContabilidadRecords.filter(r => r.Estado === 'Pendiente');
+    const pending = appState.allArcaRecords.filter(r => r.Estado === STATUS.PENDING);
+    const reconciled = appState.allArcaRecords.filter(r => r.Estado === STATUS.RECONCILED || r.Estado === STATUS.RECONCILED_WITH_DIFF);
+    const unmatchedContabilidad = appState.allContabilidadRecords.filter(r => r.Estado === STATUS.PENDING);
     
     if (pending.length > 0) XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(pending.map(({__originalIndex, matchId, ...rest}) => rest)), "ARCA Pendiente");
     if (reconciled.length > 0) XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(reconciled.map(({__originalIndex, matchId, ...rest}) => rest)), "Conciliadas");
