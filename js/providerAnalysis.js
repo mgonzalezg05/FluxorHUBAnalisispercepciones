@@ -1,4 +1,4 @@
-import { appState, ui } from './state.js';
+import { appState, ui, STATUS } from './state.js';
 import { showMessage, normalizeRecord, renderTable } from './utils.js';
 import { displayGeneralResults } from './reconciler.js';
 
@@ -32,9 +32,9 @@ export function displayProviderDetails() {
     provUI.summaryContabilidad.textContent = `$${formatCurrency(totalContabilidadProvider)}`;
     provUI.summaryDiferencia.textContent = `$${formatCurrency(diferencia)}`;
     
-    const providerPending = allArcaForProvider.filter(r => r.Estado === 'Pendiente');
-    const providerReconciled = allArcaForProvider.filter(r => r.Estado.startsWith('Conciliado'));
-    const providerUnmatchedContabilidad = allContabilidadForProvider.filter(r => r.Estado === 'Pendiente');
+    const providerPending = allArcaForProvider.filter(r => r.Estado === STATUS.PENDING);
+    const providerReconciled = allArcaForProvider.filter(r => r.Estado === STATUS.RECONCILED || r.Estado === STATUS.RECONCILED_WITH_DIFF);
+    const providerUnmatchedContabilidad = allContabilidadForProvider.filter(r => r.Estado === STATUS.PENDING);
 
     renderTable(providerPending, provUI.tablePending, { showCheckboxes: true, recordSource: 'pending' });
     renderTable(providerReconciled, provUI.tableReconciled, { showCheckboxes: true, recordSource: 'reconciled' });
@@ -130,7 +130,7 @@ export function updateReconciliationPanel() {
 export function executeManualReconciliation() {
     const { pending, unmatched, netDifference } = appState.manualSelection;
     
-    const newStatus = Math.abs(netDifference) < 0.01 ? 'Conciliada' : 'Conciliado con Diferencias';
+    const newStatus = Math.abs(netDifference) < 0.01 ? STATUS.RECONCILED : STATUS.RECONCILED_WITH_DIFF;
     const matchId = `manual_${Date.now()}`;
 
     pending.forEach(index => {
@@ -160,12 +160,12 @@ export function executeDereconciliation() {
         const record = appState.allArcaRecords.find(r => r.__originalIndex === index);
         if (record) {
             const matchId = record.matchId;
-            record.Estado = 'Pendiente';
+            record.Estado = STATUS.PENDING;
             delete record.matchId;
             if (matchId) {
                 const contRecord = appState.allContabilidadRecords.find(r => r.matchId === matchId);
                 if (contRecord) {
-                    contRecord.Estado = 'Pendiente';
+                    contRecord.Estado = STATUS.PENDING;
                     delete contRecord.matchId;
                 }
             }
@@ -191,9 +191,9 @@ export function downloadProviderReport() {
     const filterByCuit = (data, cuitCol) => data.filter(record => normalizeRecord(record, cuitCol, null).cuit === selectedCuit);
     const cleanForExport = ({__originalIndex, matchId, ...rest}) => rest;
 
-    const providerPending = filterByCuit(appState.allArcaRecords, arcaCuitCol).filter(r => r.Estado === 'Pendiente').map(cleanForExport);
-    const providerReconciled = filterByCuit(appState.allArcaRecords, arcaCuitCol).filter(r => r.Estado.startsWith('Conciliado')).map(cleanForExport);
-    const providerUnmatchedCont = filterByCuit(appState.allContabilidadRecords, contCuitCol).filter(r => r.Estado === 'Pendiente').map(cleanForExport);
+    const providerPending = filterByCuit(appState.allArcaRecords, arcaCuitCol).filter(r => r.Estado === STATUS.PENDING).map(cleanForExport);
+    const providerReconciled = filterByCuit(appState.allArcaRecords, arcaCuitCol).filter(r => r.Estado === STATUS.RECONCILED || r.Estado === STATUS.RECONCILED_WITH_DIFF).map(cleanForExport);
+    const providerUnmatchedCont = filterByCuit(appState.allContabilidadRecords, contCuitCol).filter(r => r.Estado === STATUS.PENDING).map(cleanForExport);
     
     if (providerPending.length > 0) XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(providerPending), "ARCA Pendiente");
     if (providerReconciled.length > 0) XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(providerReconciled), "Conciliadas");
