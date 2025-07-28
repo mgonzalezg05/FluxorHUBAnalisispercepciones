@@ -1,12 +1,10 @@
 import { supabaseClient } from './config.js';
 import { appState, ui } from './state.js';
-// CORRECCIÓN: Se eliminó 'populateColumnSelectors' de esta línea de importación
 import { showMessage, normalizeRecord, renderTable } from './utils.js';
 import { populateProviderSelector } from './providerAnalysis.js';
 import { calculateAllProviderDiscrepancies } from './discrepancyAnalysis.js';
 import { updateToolAvailability } from './main.js';
 
-// CORRECCIÓN: La función se movió aquí, donde pertenece.
 function populateColumnSelectors(type, headers) {
     const { reconciler: recUI } = ui;
     if (type === 'Arca') {
@@ -140,18 +138,23 @@ export function displayGeneralResults() {
     const { reconciler: recUI } = ui;
     const arcaMontoCol = recUI.selectMontoArca.value;
     const arcaData = appState.allArcaRecords;
-    const reconciled = arcaData.filter(r => r.Estado === 'Conciliada');
+    
+    const reconciled = arcaData.filter(r => r.Estado.startsWith('Conciliado'));
     const pending = arcaData.filter(r => r.Estado === 'Pendiente');
+    
     const totalArca = arcaData.reduce((sum, r) => sum + (normalizeRecord(r, null, arcaMontoCol).monto || 0), 0);
     const totalReconciled = reconciled.reduce((sum, r) => sum + (normalizeRecord(r, null, arcaMontoCol).monto || 0), 0);
     const totalPending = totalArca - totalReconciled;
+    
     const formatCurrency = (num) => num.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    
     recUI.summaryArcaAmount.textContent = `$${formatCurrency(totalArca)}`;
     recUI.summaryArcaCount.textContent = `${arcaData.length} registros`;
     recUI.summaryReconciledAmount.textContent = `$${formatCurrency(totalReconciled)}`;
     recUI.summaryReconciledCount.textContent = `${reconciled.length} registros`;
     recUI.summaryPendingAmount.textContent = `$${formatCurrency(totalPending)}`;
     recUI.summaryPendingCount.textContent = `${pending.length} registros`;
+    
     renderTable(pending, recUI.tablePending, { maxRows: 10 });
     recUI.resultsSection.classList.remove('hidden');
 }
@@ -310,5 +313,22 @@ export async function deleteSelectedReconciliation() {
             showMessage('Eliminada con éxito.', false);
             loadSavedReconciliations();
         }
+    }
+}
+
+export function downloadGeneralReport() {
+    const wb = XLSX.utils.book_new();
+    const pending = appState.allArcaRecords.filter(r => r.Estado === 'Pendiente');
+    const reconciled = appState.allArcaRecords.filter(r => r.Estado.startsWith('Conciliado'));
+    const unmatchedContabilidad = appState.allContabilidadRecords.filter(r => r.Estado === 'Pendiente');
+    
+    if (pending.length > 0) XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(pending.map(({__originalIndex, matchId, ...rest}) => rest)), "ARCA Pendiente");
+    if (reconciled.length > 0) XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(reconciled.map(({__originalIndex, matchId, ...rest}) => rest)), "Conciliadas");
+    if (unmatchedContabilidad.length > 0) XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(unmatchedContabilidad.map(({__originalIndex, matchId, ...rest}) => rest)), "Contabilidad Sin Match");
+
+    if (wb.SheetNames.length > 0) {
+        XLSX.writeFile(wb, "Reporte_Conciliacion_General.xlsx");
+    } else {
+        showMessage('No hay datos en ninguna categoría para generar el reporte.', true);
     }
 }
