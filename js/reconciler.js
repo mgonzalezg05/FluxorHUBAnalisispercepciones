@@ -112,19 +112,18 @@ export async function processReconciliation() {
                 const matchId = `auto_${++matchCounter}`;
                 arcaRec.matched = true;
                 match.matched = true;
-
+                
                 // --- CORRECCIÓN APLICADA AQUÍ ---
-                // Se usa un método más seguro (.find()) para garantizar la actualización del estado.
-                const arcaRecordToUpdate = appState.allArcaRecords.find(r => r.__originalIndex === arcaRec.original.__originalIndex);
-                if (arcaRecordToUpdate) {
-                    arcaRecordToUpdate.Estado = 'Conciliada';
-                    arcaRecordToUpdate.matchId = matchId;
-                }
+                const arcaIndex = arcaRec.original.__originalIndex;
+                const contabIndex = match.original.__originalIndex;
 
-                const contabRecordToUpdate = appState.allContabilidadRecords.find(r => r.__originalIndex === match.original.__originalIndex);
-                if (contabRecordToUpdate) {
-                    contabRecordToUpdate.Estado = 'Conciliada';
-                    contabRecordToUpdate.matchId = matchId;
+                if (appState.allArcaRecords[arcaIndex]) {
+                    appState.allArcaRecords[arcaIndex].Estado = 'Conciliada';
+                    appState.allArcaRecords[arcaIndex].matchId = matchId;
+                }
+                if (appState.allContabilidadRecords[contabIndex]) {
+                    appState.allContabilidadRecords[contabIndex].Estado = 'Conciliada';
+                    appState.allContabilidadRecords[contabIndex].matchId = matchId;
                 }
             }
         });
