@@ -13,7 +13,8 @@ export const appState = {
     manualSelection: {
         pending: new Set(),
         reconciled: new Set(),
-        unmatched: new Set()
+        unmatched: new Set(),
+        netDifference: 0, // Guarda la diferencia neta de la selección para conciliación
     },
 };
 
