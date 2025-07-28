@@ -1,5 +1,12 @@
 // Este archivo centraliza el estado de la aplicación y las referencias a los elementos de la UI.
 
+// --- CONSTANTES ---
+export const STATUS = {
+    PENDING: 'Pendiente',
+    RECONCILED: 'Conciliada',
+    RECONCILED_WITH_DIFF: 'Conciliado con Diferencias'
+};
+
 // --- ESTADO GLOBAL DE LA APLICACIÓN ---
 export let messageTimeout; // Variable para controlar el timer del mensaje
 export const appState = {
@@ -14,7 +21,7 @@ export const appState = {
         pending: new Set(),
         reconciled: new Set(),
         unmatched: new Set(),
-        netDifference: 0, // Guarda la diferencia neta de la selección para conciliación
+        netDifference: 0, 
     },
 };
 
