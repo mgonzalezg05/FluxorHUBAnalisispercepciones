@@ -113,17 +113,17 @@ export async function processReconciliation() {
                 arcaRec.matched = true;
                 match.matched = true;
                 
-                // --- CORRECCIÓN APLICADA AQUÍ ---
-                const arcaIndex = arcaRec.original.__originalIndex;
-                const contabIndex = match.original.__originalIndex;
-
-                if (appState.allArcaRecords[arcaIndex]) {
-                    appState.allArcaRecords[arcaIndex].Estado = 'Conciliada';
-                    appState.allArcaRecords[arcaIndex].matchId = matchId;
+                // --- CORRECCIÓN DEFINITIVA APLICADA AQUÍ ---
+                const arcaRecordToUpdate = appState.allArcaRecords.find(r => r.__originalIndex === arcaRec.original.__originalIndex);
+                if (arcaRecordToUpdate) {
+                    arcaRecordToUpdate.Estado = 'Conciliada';
+                    arcaRecordToUpdate.matchId = matchId;
                 }
-                if (appState.allContabilidadRecords[contabIndex]) {
-                    appState.allContabilidadRecords[contabIndex].Estado = 'Conciliada';
-                    appState.allContabilidadRecords[contabIndex].matchId = matchId;
+
+                const contabRecordToUpdate = appState.allContabilidadRecords.find(r => r.__originalIndex === match.original.__originalIndex);
+                if (contabRecordToUpdate) {
+                    contabRecordToUpdate.Estado = 'Conciliada';
+                    contabRecordToUpdate.matchId = matchId;
                 }
             }
         });
@@ -189,7 +189,8 @@ export async function saveReconciliation(isNew = false) {
             cuit_arca_col: recUI.selectCuitArca.value,
             monto_arca_col: recUI.selectMontoArca.value,
             cuit_cont_col: recUI.selectCuitContabilidad.value,
-            monto_cont_col: recUI.selectMontoContabilidad.value
+            monto_cont_col: recUI.selectMontoContabilidad.value,
+            configuracion_columnas: appState.columnVisibility
         };
 
         let reconciliationId = appState.currentReconciliationId;
@@ -262,6 +263,10 @@ export async function loadSelectedReconciliation() {
         appState.allArcaRecords = regData.filter(r => r.fuente === 'ARCA').map(r => r.datos_originales);
         appState.allContabilidadRecords = regData.filter(r => r.fuente === 'Contabilidad').map(r => r.datos_originales);
         
+        if (concData.configuracion_columnas) {
+            appState.columnVisibility = concData.configuracion_columnas;
+        }
+
         const arcaHeaders = appState.allArcaRecords.length > 0 ? Object.keys(appState.allArcaRecords[0]) : [];
         const contHeaders = appState.allContabilidadRecords.length > 0 ? Object.keys(appState.allContabilidadRecords[0]) : [];
         populateColumnSelectors('Arca', arcaHeaders);
