@@ -217,7 +217,9 @@ export async function saveReconciliation(isNew = false) {
         loadSavedReconciliations();
 
     } catch (error) {
-        console.error('Error al guardar:', error);
+        // --- CÓDIGO MEJORADO PARA MOSTRAR ERRORES ---
+        console.error('Error completo al guardar:', error);
+        console.error('Mensaje específico del error:', error.message);
         showMessage(`Error al guardar: ${error.message}`, true);
     } finally {
         recUI.loaderOverlay.style.display = 'none';
