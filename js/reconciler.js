@@ -101,13 +101,39 @@ export async function processReconciliation() {
         const contNorm = appState.allContabilidadRecords.map(r => normalizeRecord(r, cuitContCol, montoContCol));
         let matchCounter = 0;
 
-        arcaNorm.forEach(arcaRec => {
-            const match = contNorm.find(contRec => 
-                !contRec.matched && 
-                contRec.cuit === arcaRec.cuit && 
-                contRec.monto.toFixed(2) === arcaRec.monto.toFixed(2)
-            );
+        console.log("--- INICIANDO DEPURACIÓN DE CONCILIACIÓN AUTOMÁTICA ---");
+        
+        arcaNorm.forEach((arcaRec, index) => {
+            if (index < 5) { // Solo mostrar los primeros 5 para no llenar la consola
+                console.log(`Buscando match para ARCA record #${index}:`, { 
+                    cuit: arcaRec.cuit, 
+                    monto: arcaRec.monto.toFixed(2), 
+                    original: arcaRec.original 
+                });
+            }
+
+            const match = contNorm.find((contRec, contIndex) => {
+                const cuitMatch = contRec.cuit === arcaRec.cuit;
+                const montoMatch = contRec.monto.toFixed(2) === arcaRec.monto.toFixed(2);
+                const isMatched = !contRec.matched && cuitMatch && montoMatch;
+
+                if (index < 1 && contIndex < 5) { // Para el primer registro de ARCA, mostrar las primeras 5 comparaciones
+                    console.log(`... comparando con Contabilidad record #${contIndex}:`, {
+                        cuitCoincide: cuitMatch,
+                        montoCoincide: montoMatch,
+                        yaConciliado: contRec.matched,
+                        montoARCA: arcaRec.monto.toFixed(2),
+                        montoCont: contRec.monto.toFixed(2),
+                        cuitARCA: arcaRec.cuit,
+                        cuitCont: contRec.cuit,
+                    });
+                }
+                
+                return isMatched;
+            });
+
             if (match) {
+                console.log(`¡MATCH ENCONTRADO! Para ARCA record #${index}`);
                 const matchId = `auto_${++matchCounter}`;
                 arcaRec.matched = true;
                 match.matched = true;
@@ -117,6 +143,8 @@ export async function processReconciliation() {
                 appState.allContabilidadRecords[match.original.__originalIndex].matchId = matchId;
             }
         });
+        
+        console.log("--- DEPURACIÓN FINALIZADA ---");
 
         const allArcaCuits = appState.allArcaRecords.map(r => normalizeRecord(r, cuitArcaCol, null).cuit);
         const allContabilidadCuits = appState.allContabilidadRecords.map(r => normalizeRecord(r, cuitContCol, null).cuit);
