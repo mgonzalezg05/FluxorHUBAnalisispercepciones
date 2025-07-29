@@ -89,7 +89,8 @@ function initialize() {
     // Herramienta: Análisis por Proveedor
     ui.providerAnalysis.providerSelect.addEventListener('change', () => {
         displayProviderDetails();
-        handleManualSelection(); // <-- LÍNEA CORREGIDA
+        // CORRECCIÓN: Llamamos a la función pública que reinicia la selección y actualiza el panel.
+        handleManualSelection(); 
     });
     ui.providerAnalysis.downloadBtn.addEventListener('click', () => downloadProviderReport());
     
