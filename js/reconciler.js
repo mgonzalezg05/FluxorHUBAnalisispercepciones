@@ -206,8 +206,8 @@ export async function saveReconciliation(isNew = false) {
             appState.currentReconciliationId = reconciliationId; 
         }
         
-        const arcaRecordsToSave = appState.allArcaRecords.map(rec => ({ conciliacion_id: reconciliationId, fuente: 'ARCA', estado: rec.Estado, match_id: rec.matchId || null, datos_originales: rec }));
-        const contabilidadRecordsToSave = appState.allContabilidadRecords.map(rec => ({ conciliacion_id: reconciliationId, fuente: 'Contabilidad', estado: rec.Estado, match_id: rec.matchId || null, datos_originales: rec }));
+        const arcaRecordsToSave = appState.allArcaRecords.map(rec => ({ conciliacion_id: reconciliationId, fuente: 'ARCA', estado: rec.Estado, match_id: rec.matchId || null, datos_originales: rec, comentario: rec.comentario || null }));
+        const contabilidadRecordsToSave = appState.allContabilidadRecords.map(rec => ({ conciliacion_id: reconciliationId, fuente: 'Contabilidad', estado: rec.Estado, match_id: rec.matchId || null, datos_originales: rec, comentario: rec.comentario || null }));
         const allRecordsToSave = [...arcaRecordsToSave, ...contabilidadRecordsToSave];
 
         const { error: regError } = await supabaseClient.from('registros').insert(allRecordsToSave);
@@ -217,9 +217,7 @@ export async function saveReconciliation(isNew = false) {
         loadSavedReconciliations();
 
     } catch (error) {
-        // --- CÓDIGO MEJORADO PARA MOSTRAR ERRORES ---
-        console.error('Error completo al guardar:', error);
-        console.error('Mensaje específico del error:', error.message);
+        console.error('Error al guardar:', error);
         showMessage(`Error al guardar: ${error.message}`, true);
     } finally {
         recUI.loaderOverlay.style.display = 'none';
@@ -261,8 +259,8 @@ export async function loadSelectedReconciliation() {
         if (regError) throw regError;
 
         appState.currentReconciliationId = selectedId;
-        appState.allArcaRecords = regData.filter(r => r.fuente === 'ARCA').map(r => r.datos_originales);
-        appState.allContabilidadRecords = regData.filter(r => r.fuente === 'Contabilidad').map(r => r.datos_originales);
+        appState.allArcaRecords = regData.filter(r => r.fuente === 'ARCA').map(r => ({ ...r.datos_originales, comentario: r.comentario }));
+        appState.allContabilidadRecords = regData.filter(r => r.fuente === 'Contabilidad').map(r => ({ ...r.datos_originales, comentario: r.comentario }));
         
         if (concData.configuracion_columnas) {
             appState.columnVisibility = concData.configuracion_columnas;
