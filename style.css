@@ -367,6 +367,7 @@ input:checked + .slider:before { transform: translateX(20px); }
     padding: 10px 20px;
     font-size: 0.9rem;
 }
+
 /* =========== ESTILOS PARA LA VENTANA DE COMENTARIOS (MODAL) =========== */
 .modal-overlay {
     position: fixed;
