@@ -89,6 +89,10 @@ export const ui = {
         summaryArca: document.getElementById('provider-summary-arca'),
         summaryContabilidad: document.getElementById('provider-summary-contabilidad'),
         summaryDiferencia: document.getElementById('provider-summary-diferencia'),
+        commentModal: document.getElementById('comment-modal'),
+        commentTextarea: document.getElementById('comment-textarea'),
+        closeCommentModalBtn: document.getElementById('close-comment-modal'),
+        saveCommentBtn: document.getElementById('save-comment-btn'),
     },
     discrepancyAnalysis: {
         placeholder: document.getElementById('discrepancy-analysis-placeholder'),
