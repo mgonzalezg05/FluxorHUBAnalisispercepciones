@@ -1,6 +1,6 @@
 import { ui, appState } from './state.js';
 import { handleFileSelect, processReconciliation, saveReconciliation, loadSavedReconciliations, loadSelectedReconciliation, renameSelectedReconciliation, deleteSelectedReconciliation, downloadGeneralReport } from './reconciler.js';
-import { displayProviderDetails, handleManualSelection, executeManualReconciliation, executeDereconciliation, downloadProviderReport, populateProviderSelector } from './providerAnalysis.js';
+import { displayProviderDetails, handleManualSelection, executeManualReconciliation, executeDereconciliation, downloadProviderReport, populateProviderSelector, showCommentModal, saveComment } from './providerAnalysis.js';
 import { displayDiscrepancyAnalysis } from './discrepancyAnalysis.js';
 
 // --- LÓGICA DE NAVEGACIÓN Y VISUALIZACIÓN ---
@@ -89,7 +89,6 @@ function initialize() {
     // Herramienta: Análisis por Proveedor
     ui.providerAnalysis.providerSelect.addEventListener('change', () => {
         displayProviderDetails();
-        // CORRECCIÓN: Llamamos a la función pública que reinicia la selección y actualiza el panel.
         handleManualSelection(); 
     });
     ui.providerAnalysis.downloadBtn.addEventListener('click', () => downloadProviderReport());
@@ -158,6 +157,20 @@ function initialize() {
         }
     });
     
+    // Comentarios
+    document.addEventListener('click', (e) => {
+        if (e.target.classList.contains('comment-icon')) {
+            const { recordIndex, sourceFile } = e.target.dataset;
+            showCommentModal(recordIndex, sourceFile);
+        }
+    });
+
+    ui.providerAnalysis.closeCommentModalBtn.addEventListener('click', () => {
+        ui.providerAnalysis.commentModal.classList.add('hidden');
+    });
+
+    ui.providerAnalysis.saveCommentBtn.addEventListener('click', saveComment);
+
     // Iniciar la app
     document.querySelector('.menu-item[data-tool="reconciler"]').click();
     loadSavedReconciliations();
