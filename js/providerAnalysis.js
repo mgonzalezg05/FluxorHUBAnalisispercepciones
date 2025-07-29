@@ -1,6 +1,7 @@
 import { appState, ui, STATUS } from './state.js';
 import { showMessage, normalizeRecord, renderTable } from './utils.js';
 import { displayGeneralResults } from './reconciler.js';
+import { supabaseClient } from './config.js';
 
 export function populateProviderSelector() {
     const { providerAnalysis: provUI } = ui;
@@ -204,4 +205,44 @@ export function downloadProviderReport() {
     } else {
         showMessage('No hay datos para exportar para este proveedor.', true);
     }
+}
+
+export function showCommentModal(recordIndex, sourceFile) {
+    const record = (sourceFile === 'ARCA' ? appState.allArcaRecords : appState.allContabilidadRecords)
+        .find(r => r.__originalIndex === parseInt(recordIndex));
+
+    if (!record) return;
+
+    ui.providerAnalysis.commentModal.classList.remove('hidden');
+    ui.providerAnalysis.commentTextarea.value = record.comentario || '';
+    ui.providerAnalysis.commentTextarea.focus();
+
+    ui.providerAnalysis.commentModal.dataset.currentIndex = recordIndex;
+    ui.providerAnalysis.commentModal.dataset.currentSource = sourceFile;
+}
+
+export async function saveComment() {
+    const recordIndex = parseInt(ui.providerAnalysis.commentModal.dataset.currentIndex);
+    const sourceFile = ui.providerAnalysis.commentModal.dataset.currentSource;
+    const commentText = ui.providerAnalysis.commentTextarea.value;
+    
+    const recordList = sourceFile === 'ARCA' ? appState.allArcaRecords : appState.allContabilidadRecords;
+    const record = recordList.find(r => r.__originalIndex === recordIndex);
+
+    if (record) {
+        record.comentario = commentText;
+        
+        const icon = document.querySelector(`.comment-icon[data-record-index='${recordIndex}']`);
+        if (icon) {
+            if (commentText) {
+                icon.classList.add('has-comment');
+                icon.title = commentText;
+            } else {
+                icon.classList.remove('has-comment');
+                icon.title = 'Añadir comentario';
+            }
+        }
+    }
+    
+    ui.providerAnalysis.commentModal.classList.add('hidden');
 }
