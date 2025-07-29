@@ -1,4 +1,4 @@
-import { appState, ui, messageTimeout } from './state.js';
+import { appState, ui, messageTimeout, SOURCE_TYPES } from './state.js';
 import { handleManualSelection } from './providerAnalysis.js';
 
 // --- FUNCIONES AUXILIARES GLOBALES ---
@@ -12,7 +12,6 @@ export const showMessage = (message, isError = false) => {
     msgBox.classList.add(isError ? 'error' : 'success');
     msgBox.classList.remove('hidden');
 
-    // Usamos una variable global a través del módulo de estado para el timeout
     appState.messageTimeout = setTimeout(() => {
         msgBox.classList.add('hidden');
     }, 5000);
@@ -119,7 +118,7 @@ export const renderTable = (jsonData, tableElement, { maxRows = -1, showCheckbox
             }
             
             commentIcon.dataset.recordIndex = rowData.__originalIndex;
-            const source = (recordSource === 'pending' || recordSource === 'reconciled') ? 'ARCA' : 'Contabilidad';
+            const source = (recordSource === 'pending' || recordSource === 'reconciled') ? SOURCE_TYPES.ARCA : SOURCE_TYPES.CONTABILIDAD;
             commentIcon.dataset.sourceFile = source;
 
             commentTd.appendChild(commentIcon);
