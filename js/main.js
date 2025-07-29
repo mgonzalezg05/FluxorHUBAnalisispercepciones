@@ -1,5 +1,5 @@
 import { ui, appState } from './state.js';
-import { handleFileSelect, processReconciliation, saveReconciliation, loadSavedReconciliations, loadSelectedReconciliation, renameSelectedReconciliation, deleteSelectedReconciliation } from './reconciler.js';
+import { handleFileSelect, processReconciliation, saveReconciliation, loadSavedReconciliations, loadSelectedReconciliation, renameSelectedReconciliation, deleteSelectedReconciliation, downloadGeneralReport } from './reconciler.js';
 import { displayProviderDetails, handleManualSelection, executeManualReconciliation, executeDereconciliation, downloadProviderReport, populateProviderSelector } from './providerAnalysis.js';
 import { displayDiscrepancyAnalysis } from './discrepancyAnalysis.js';
 
@@ -33,7 +33,7 @@ function setupNavigation() {
             ui.toolContents.forEach(content => {
                 content.classList.toggle('hidden', content.id !== `tool-${tool}`);
             });
-            // No es necesario llamar a updateToolAvailability aquí, se maneja al procesar/cargar.
+            updateToolAvailability();
         });
     });
 }
@@ -84,16 +84,14 @@ function initialize() {
     
     // Herramienta: Conciliador General
     ui.reconciler.processBtn.addEventListener('click', processReconciliation);
-    ui.reconciler.downloadBtn.addEventListener('click', () => downloadReport(true)); // Asumiendo que downloadReport se importará o moverá
+    ui.reconciler.downloadBtn.addEventListener('click', () => downloadGeneralReport());
     
     // Herramienta: Análisis por Proveedor
     ui.providerAnalysis.providerSelect.addEventListener('change', () => {
         displayProviderDetails();
-        appState.manualSelection = { pending: new Set(), reconciled: new Set(), unmatched: new Set() };
-        updateReconciliationPanel(); // Necesitamos esta función aquí
+        handleManualSelection(); // <-- LÍNEA CORREGIDA
     });
     ui.providerAnalysis.downloadBtn.addEventListener('click', () => downloadProviderReport());
-    document.addEventListener('manualSelectionChange', handleManualSelection);
     
     const providerFilterInput = document.getElementById('provider-filter-input');
     providerFilterInput.addEventListener('input', () => {
@@ -109,6 +107,8 @@ function initialize() {
     // Panel de conciliación manual
     ui.reconciliationPanel.reconcileBtn.addEventListener('click', executeManualReconciliation);
     ui.reconciliationPanel.deReconcileBtn.addEventListener('click', executeDereconciliation);
+    document.addEventListener('manualSelectionChange', handleManualSelection);
+
 
     // Herramienta: Análisis de Desvíos
     ui.discrepancyAnalysis.applyFilterBtn.addEventListener('click', displayDiscrepancyAnalysis);
