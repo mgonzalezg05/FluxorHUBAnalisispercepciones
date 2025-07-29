@@ -1,5 +1,5 @@
 import { supabaseClient } from './config.js';
-import { appState, ui, STATUS } from './state.js';
+import { appState, ui, STATUS, SOURCE_TYPES } from './state.js';
 import { showMessage, normalizeRecord, renderTable } from './utils.js';
 import { populateProviderSelector } from './providerAnalysis.js';
 import { calculateAllProviderDiscrepancies } from './discrepancyAnalysis.js';
@@ -206,8 +206,8 @@ export async function saveReconciliation(isNew = false) {
             appState.currentReconciliationId = reconciliationId; 
         }
         
-        const arcaRecordsToSave = appState.allArcaRecords.map(rec => ({ conciliacion_id: reconciliationId, fuente: 'ARCA', estado: rec.Estado, match_id: rec.matchId || null, datos_originales: rec, comentario: rec.comentario || null }));
-        const contabilidadRecordsToSave = appState.allContabilidadRecords.map(rec => ({ conciliacion_id: reconciliationId, fuente: 'Contabilidad', estado: rec.Estado, match_id: rec.matchId || null, datos_originales: rec, comentario: rec.comentario || null }));
+        const arcaRecordsToSave = appState.allArcaRecords.map(rec => ({ conciliacion_id: reconciliationId, fuente: SOURCE_TYPES.ARCA, estado: rec.Estado, match_id: rec.matchId || null, datos_originales: rec, comentario: rec.comentario || null }));
+        const contabilidadRecordsToSave = appState.allContabilidadRecords.map(rec => ({ conciliacion_id: reconciliationId, fuente: SOURCE_TYPES.CONTABILIDAD, estado: rec.Estado, match_id: rec.matchId || null, datos_originales: rec, comentario: rec.comentario || null }));
         const allRecordsToSave = [...arcaRecordsToSave, ...contabilidadRecordsToSave];
 
         const { error: regError } = await supabaseClient.from('registros').insert(allRecordsToSave);
@@ -259,8 +259,8 @@ export async function loadSelectedReconciliation() {
         if (regError) throw regError;
 
         appState.currentReconciliationId = selectedId;
-        appState.allArcaRecords = regData.filter(r => r.fuente === 'ARCA').map(r => ({ ...r.datos_originales, comentario: r.comentario }));
-        appState.allContabilidadRecords = regData.filter(r => r.fuente === 'Contabilidad').map(r => ({ ...r.datos_originales, comentario: r.comentario }));
+        appState.allArcaRecords = regData.filter(r => r.fuente === SOURCE_TYPES.ARCA).map(r => ({ ...r.datos_originales, comentario: r.comentario }));
+        appState.allContabilidadRecords = regData.filter(r => r.fuente === SOURCE_TYPES.CONTABILIDAD).map(r => ({ ...r.datos_originales, comentario: r.comentario }));
         
         if (concData.configuracion_columnas) {
             appState.columnVisibility = concData.configuracion_columnas;
