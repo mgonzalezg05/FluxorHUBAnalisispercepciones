@@ -1,4 +1,4 @@
-import { appState, ui, STATUS } from './state.js';
+import { appState, ui, STATUS, SOURCE_TYPES } from './state.js';
 import { showMessage, normalizeRecord, renderTable } from './utils.js';
 import { displayGeneralResults } from './reconciler.js';
 import { supabaseClient } from './config.js';
@@ -119,7 +119,7 @@ export function updateReconciliationPanel() {
         rest.selectedNetTotal.textContent = `$${formatCurrency(net)}`;
         rest.selectedNetTotal.style.color = Math.abs(net) < 1000 ? 'var(--success-color)' : 'var(--danger-color)';
         
-        const canReconcile = Math.abs(net) < 1000 && (pending.size + unmatched.size) >= 2;
+        const canReconcile = Math.abs(net) < 1000 && (pending.size > 0 || unmatched.size > 0);
         reconcileBtn.disabled = !canReconcile;
 
     }
@@ -208,7 +208,7 @@ export function downloadProviderReport() {
 }
 
 export function showCommentModal(recordIndex, sourceFile) {
-    const record = (sourceFile === 'ARCA' ? appState.allArcaRecords : appState.allContabilidadRecords)
+    const record = (sourceFile === SOURCE_TYPES.ARCA ? appState.allArcaRecords : appState.allContabilidadRecords)
         .find(r => r.__originalIndex === parseInt(recordIndex));
 
     if (!record) return;
@@ -226,7 +226,7 @@ export async function saveComment() {
     const sourceFile = ui.providerAnalysis.commentModal.dataset.currentSource;
     const commentText = ui.providerAnalysis.commentTextarea.value;
     
-    const recordList = sourceFile === 'ARCA' ? appState.allArcaRecords : appState.allContabilidadRecords;
+    const recordList = sourceFile === SOURCE_TYPES.ARCA ? appState.allArcaRecords : appState.allContabilidadRecords;
     const record = recordList.find(r => r.__originalIndex === recordIndex);
 
     if (record) {
