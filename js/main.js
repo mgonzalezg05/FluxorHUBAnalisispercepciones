@@ -40,26 +40,14 @@ function setupNavigation() {
 
 // --- INICIALIZACIÓN DE LA APP ---
 function initialize() {
-    // Configuración del tema (oscuro/claro)
-    const currentTheme = localStorage.getItem("theme");
-    if (currentTheme) {
-        document.body.classList.add(currentTheme);
-        if (currentTheme === "dark-mode") ui.themeToggle.checked = true;
-    }
-    ui.themeToggle.addEventListener("change", function() {
-        document.body.classList.toggle("dark-mode", this.checked);
-        localStorage.setItem("theme", this.checked ? "dark-mode" : "light-mode");
-    });
+    // --- Lógica del Theme Switcher eliminada ---
 
-    // Prevenir comportamiento por defecto de arrastrar y soltar
     ['dragover', 'drop'].forEach(eventName => {
         window.addEventListener(eventName, e => e.preventDefault());
     });
 
-    // Configurar la navegación principal
     setupNavigation();
 
-    // Configurar las zonas de carga de archivos
     function setupDropZone(dropZone, fileInput, onFileSelect) {
         dropZone.addEventListener('click', () => fileInput.click());
         fileInput.addEventListener('change', (e) => onFileSelect(e.target.files[0]));
@@ -170,7 +158,7 @@ function initialize() {
     });
 
     ui.providerAnalysis.saveCommentBtn.addEventListener('click', saveComment);
-
+    
     // Iniciar la app
     document.querySelector('.menu-item[data-tool="reconciler"]').click();
     loadSavedReconciliations();
