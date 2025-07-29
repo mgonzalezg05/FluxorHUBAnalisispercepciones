@@ -1,4 +1,5 @@
 import { appState, ui, messageTimeout } from './state.js';
+import { handleManualSelection } from './providerAnalysis.js';
 
 // --- FUNCIONES AUXILIARES GLOBALES ---
 
@@ -46,8 +47,14 @@ export const renderTable = (jsonData, tableElement, { maxRows = -1, showCheckbox
         generateColumnConfigurator(tableElement.id, [], showCheckboxes);
         return;
     }
-    const headers = Object.keys(jsonData[0]).filter(h => h !== '__originalIndex' && h !== 'matchId');
-    generateColumnConfigurator(tableElement.id, headers, showCheckboxes);
+    
+    const dataHeaders = Object.keys(jsonData[0]).filter(h => h !== '__originalIndex' && h !== 'matchId' && h !== 'comentario');
+    
+    // Si la tabla es de análisis de proveedor, añadimos la columna Comentarios.
+    const isProviderAnalysisTable = tableElement.id.startsWith('table-provider');
+    const displayHeaders = isProviderAnalysisTable ? [...dataHeaders, 'Comentarios'] : dataHeaders;
+    
+    generateColumnConfigurator(tableElement.id, dataHeaders, showCheckboxes);
     const dataToShow = maxRows === -1 ? jsonData : jsonData.slice(0, maxRows);
     const thead = document.createElement('thead');
     const headerRow = document.createElement('tr');
@@ -64,35 +71,34 @@ export const renderTable = (jsonData, tableElement, { maxRows = -1, showCheckbox
             bodyCheckboxes.forEach(cb => {
                 cb.checked = isChecked;
             });
-            // Asumimos que una función handleManualSelection existirá en el ámbito que llame a renderTable
-            // Para mantener esto modular, el event listener debería estar en el módulo que usa la tabla.
-            // Por simplicidad en este refactor, mantenemos la dependencia global.
-            document.dispatchEvent(new CustomEvent('manualSelectionChange'));
+            handleManualSelection();
         });
         th.appendChild(selectAllCheckbox);
         headerRow.appendChild(th);
     }
 
-    headers.forEach(headerText => {
+    displayHeaders.forEach(headerText => {
         const th = document.createElement('th');
         th.textContent = headerText;
         headerRow.appendChild(th);
     });
     thead.appendChild(headerRow);
+    
     const tbody = document.createElement('tbody');
-    dataToShow.forEach((rowData, index) => {
+    dataToShow.forEach((rowData) => {
         const tr = document.createElement('tr');
         if (showCheckboxes) {
             const td = document.createElement('td');
             td.className = 'checkbox-cell';
             const checkbox = document.createElement('input');
             checkbox.type = 'checkbox';
-            checkbox.dataset.index = rowData.__originalIndex !== undefined ? rowData.__originalIndex : index;
+            checkbox.dataset.index = rowData.__originalIndex;
             checkbox.dataset.source = recordSource;
             td.appendChild(checkbox);
             tr.appendChild(td);
         }
-        headers.forEach(header => {
+        
+        dataHeaders.forEach(header => {
             const td = document.createElement('td');
             let value = rowData[header];
             if (value instanceof Date) { value = value.toLocaleDateString('es-AR'); } 
@@ -100,8 +106,30 @@ export const renderTable = (jsonData, tableElement, { maxRows = -1, showCheckbox
             td.textContent = value ?? '';
             tr.appendChild(td);
         });
+
+        if (isProviderAnalysisTable) {
+            const commentTd = document.createElement('td');
+            const commentIcon = document.createElement('i');
+            commentIcon.className = 'fa-regular fa-comment comment-icon';
+            
+            if (rowData.comentario) {
+                commentIcon.classList.add('has-comment');
+                commentIcon.title = rowData.comentario;
+            } else {
+                commentIcon.title = 'Añadir comentario';
+            }
+            
+            commentIcon.dataset.recordIndex = rowData.__originalIndex;
+            const source = (recordSource === 'pending' || recordSource === 'reconciled') ? 'ARCA' : 'Contabilidad';
+            commentIcon.dataset.sourceFile = source;
+
+            commentTd.appendChild(commentIcon);
+            tr.appendChild(commentTd);
+        }
+
         tbody.appendChild(tr);
     });
+    
     tableElement.appendChild(thead);
     tableElement.appendChild(tbody);
     applyColumnVisibilityStyles();
