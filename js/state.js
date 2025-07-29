@@ -7,6 +7,11 @@ export const STATUS = {
     RECONCILED_WITH_DIFF: 'Conciliado con Diferencias'
 };
 
+export const SOURCE_TYPES = {
+    ARCA: 'ARCA',
+    CONTABILIDAD: 'Contabilidad'
+};
+
 // --- ESTADO GLOBAL DE LA APLICACIÓN ---
 export let messageTimeout; // Variable para controlar el timer del mensaje
 export const appState = {
