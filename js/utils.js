@@ -50,7 +50,6 @@ export const renderTable = (jsonData, tableElement, { maxRows = -1, showCheckbox
     
     const dataHeaders = Object.keys(jsonData[0]).filter(h => h !== '__originalIndex' && h !== 'matchId' && h !== 'comentario');
     
-    // Si la tabla es de análisis de proveedor, añadimos la columna Comentarios.
     const isProviderAnalysisTable = tableElement.id.startsWith('table-provider');
     const displayHeaders = isProviderAnalysisTable ? [...dataHeaders, 'Comentarios'] : dataHeaders;
     
