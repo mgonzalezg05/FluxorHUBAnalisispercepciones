@@ -89,7 +89,7 @@ function initialize() {
     // Herramienta: Análisis por Proveedor
     ui.providerAnalysis.providerSelect.addEventListener('change', () => {
         displayProviderDetails();
-        handleManualSelection(); 
+        handleManualSelection();
     });
     ui.providerAnalysis.downloadBtn.addEventListener('click', () => downloadProviderReport());
     
