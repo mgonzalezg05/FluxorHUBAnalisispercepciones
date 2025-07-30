@@ -1,11 +1,11 @@
-import { appState, ui, messageTimeout, SOURCE_TYPES } from './state.js';
+import { appState, ui, SOURCE_TYPES } from './state.js';
 import { handleManualSelection } from './providerAnalysis.js';
 
 // --- FUNCIONES AUXILIARES GLOBALES ---
 
 export const showMessage = (message, isError = false) => {
     const msgBox = ui.reconciler.messageBox;
-    clearTimeout(messageTimeout);
+    clearTimeout(appState.messageTimeout);
 
     msgBox.textContent = message;
     msgBox.className = 'message-box';
