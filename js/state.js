@@ -13,7 +13,6 @@ export const SOURCE_TYPES = {
 };
 
 // --- ESTADO GLOBAL DE LA APLICACIÓN ---
-export let messageTimeout; // Variable para controlar el timer del mensaje
 export const appState = {
     currentReconciliationId: null, // Guarda el ID de la sesión cargada
     providerDiscrepancies: [], // Guarda los desvíos calculados
@@ -26,8 +25,9 @@ export const appState = {
         pending: new Set(),
         reconciled: new Set(),
         unmatched: new Set(),
-        netDifference: 0, 
+        netDifference: 0,
     },
+    messageTimeout: null, // Timer para ocultar mensajes
 };
 
 // --- ELEMENTOS DE LA UI (Interfaz de Usuario) ---
